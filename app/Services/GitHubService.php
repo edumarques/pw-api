@@ -25,7 +25,7 @@ class GitHubService
     {
         $this->token = env('APP_GITHUB_TOKEN');
 
-        throw_if(empty($this->token), new EnvironmentException('GITHUB_TOKEN is not set in .env'));
+        throw_if(blank($this->token), new EnvironmentException('GITHUB_TOKEN is not set in .env'));
     }
 
 

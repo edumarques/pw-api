@@ -19,7 +19,9 @@ use Illuminate\Http\Client\PendingRequest;
  */
 final class GitHubServiceTest extends TestCase
 {
-    private GitHubService $gitHubService;
+    private ?string $originalGitHubToken;
+
+    private ?string $testGitHubToken;
 
 
     public function testEnvVarIsNotSet(): void
@@ -40,12 +42,18 @@ final class GitHubServiceTest extends TestCase
      */
     public function testGetUserDataWithFailure(): void
     {
+        $this->setGitHubToken();
+
+        $this->expectExceptionObject(new EnvironmentException('GITHUB_TOKEN is not set in .env'));
+
+        $gitHubService = new GitHubService();
+
         $pendingRequest = \Mockery::mock(PendingRequest::class);
 
         Http::shouldReceive('withHeaders')
             ->with(
                 [
-                    'Authorization' => 'token 2de1272ea3f71c0887999a663094d990099dcc16',
+                    'Authorization' => 'token ' . $this->testGitHubToken,
                 ]
             )->andReturn($pendingRequest);
 
@@ -57,7 +65,9 @@ final class GitHubServiceTest extends TestCase
 
         $this->expectExceptionObject(new RequestException($response));
 
-        $this->gitHubService->getUserData();
+        $gitHubService->getUserData();
+
+        $this->restoreGitHubToken();
     }
 
 
@@ -66,12 +76,14 @@ final class GitHubServiceTest extends TestCase
      */
     public function testGetUserData(): void
     {
+        $this->setGitHubToken();
+
         $pendingRequest = \Mockery::mock(PendingRequest::class);
 
         Http::shouldReceive('withHeaders')
             ->with(
                 [
-                    'Authorization' => 'token 2de1272ea3f71c0887999a663094d990099dcc16',
+                    'Authorization' => 'token ' . $this->testGitHubToken,
                 ]
             )->andReturn($pendingRequest);
 
@@ -81,7 +93,11 @@ final class GitHubServiceTest extends TestCase
             ->with('https://api.github.com/users/edumarques')
             ->andReturn($response);
 
-        $this->assertSame($response, $this->gitHubService->getUserData());
+        $gitHubService = new GitHubService();
+
+        $this->assertSame($response, $gitHubService->getUserData());
+
+        $this->restoreGitHubToken();
     }
 
 
@@ -90,12 +106,14 @@ final class GitHubServiceTest extends TestCase
      */
     public function testGetReposDataWithFailure(): void
     {
+        $this->setGitHubToken();
+
         $pendingRequest = \Mockery::mock(PendingRequest::class);
 
         Http::shouldReceive('withHeaders')
             ->with(
                 [
-                    'Authorization' => 'token 2de1272ea3f71c0887999a663094d990099dcc16',
+                    'Authorization' => 'token ' . $this->testGitHubToken,
                 ]
             )->andReturn($pendingRequest);
 
@@ -107,7 +125,11 @@ final class GitHubServiceTest extends TestCase
 
         $this->expectExceptionObject(new RequestException($response));
 
-        $this->gitHubService->getReposData();
+        $gitHubService = new GitHubService();
+
+        $gitHubService->getReposData();
+
+        $this->restoreGitHubToken();
     }
 
 
@@ -116,12 +138,14 @@ final class GitHubServiceTest extends TestCase
      */
     public function testGetReposData(): void
     {
+        $this->setGitHubToken();
+
         $pendingRequest = \Mockery::mock(PendingRequest::class);
 
         Http::shouldReceive('withHeaders')
             ->with(
                 [
-                    'Authorization' => 'token 2de1272ea3f71c0887999a663094d990099dcc16',
+                    'Authorization' => 'token ' . $this->testGitHubToken,
                 ]
             )->andReturn($pendingRequest);
 
@@ -131,14 +155,27 @@ final class GitHubServiceTest extends TestCase
             ->with('https://api.github.com/users/edumarques/repos')
             ->andReturn($response);
 
-        $this->assertSame($response, $this->gitHubService->getReposData());
+        $gitHubService = new GitHubService();
+
+        $this->assertSame($response, $gitHubService->getReposData());
+
+        $this->restoreGitHubToken();
     }
 
 
-    protected function setUp(): void
+    private function setGitHubToken(): void
     {
-        parent::setUp();
+        $this->originalGitHubToken = Env::getRepository()->get('APP_GITHUB_TOKEN');
+        $this->testGitHubToken     = uniqid();
 
-        $this->gitHubService = new GitHubService();
+        Env::getRepository()->set('APP_GITHUB_TOKEN', $this->testGitHubToken);
+    }
+
+
+    private function restoreGitHubToken(): void
+    {
+        if ($this->originalGitHubToken !== null) {
+            Env::getRepository()->set('APP_GITHUB_TOKEN', $this->originalGitHubToken);
+        }
     }
 }
