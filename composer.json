@@ -68,7 +68,7 @@
     ],
     "test-coverage-report": [
       "@putenv XDEBUG_MODE=coverage",
-      "vendor/phpunit/phpunit/phpunit --coverage-clover coverage/logs/clover.xml --coverage-html coverage/coverage"
+      "vendor/phpunit/phpunit/phpunit --testsuite Unit --coverage-clover coverage/logs/clover.xml --coverage-html coverage/coverage"
     ],
     "test": "vendor/phpunit/phpunit/phpunit",
     "test-functional": "vendor/phpunit/phpunit/phpunit --testsuite Functional",
