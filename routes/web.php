@@ -1,6 +1,8 @@
 <?php
 
-/** @var \Laravel\Lumen\Routing\Router $router */
+declare(strict_types=1);
+
+use Laravel\Lumen\Routing\Router;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +15,34 @@
 |
 */
 
-$router->get('/', function () use ($router) {
-    return $router->app->version();
-});
+/** @var Router $router */
+
+$router->get('/', fn() => $router->app->version());
+
+$router->group(
+    ['prefix' => '/api/v1'],
+    function () use ($router): void {
+        /**
+         * Configuration routes
+         * @see \App\Http\Controllers\ConfigController
+         */
+        $router->group(
+            ['prefix' => '/config'],
+            function () use ($router): void {
+                $router->get('/status', 'ConfigController@status');
+            }
+        );
+
+        /**
+         * Portfolio routes
+         * @see \App\Http\Controllers\PortfolioController
+         */
+        $router->group(
+            ['prefix' => '/portfolio'],
+            function () use ($router): void {
+                $router->get('/user', 'PortfolioController@user');
+                $router->get('/repos', 'PortfolioController@repos');
+            }
+        );
+    }
+);
