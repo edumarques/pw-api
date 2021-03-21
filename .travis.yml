@@ -1,0 +1,9 @@
+language: php
+php:
+  - "8.0"
+before_script:
+  - composer install
+script:
+  - composer test-coverage-report
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
